@@ -21,6 +21,7 @@ let params = $state({
 	weightWander: 1.0,
 	obstacleRadius: 30,
 	showTrail: false,
+	torusMode: true,
 });
 
 let telemetry = $state({

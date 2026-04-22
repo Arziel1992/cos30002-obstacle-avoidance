@@ -1,62 +1,66 @@
-# COS30002 — Local Space Obstacle Avoidance
+# Local Space Obstacle Avoidance (COS30002)
 
-Interactive visualisation of Craig Reynolds' local-space obstacle avoidance algorithm for COS30002 Artificial Intelligence for Games, Module 7.
+Interactive visualisation of Craig Reynolds' local-space obstacle avoidance algorithm for COS30002 Artificial Intelligence for Games. This tool demonstrates how modern games translate spatial geometry into agent-relative coordinates to optimize collision detection and steering behaviors.
 
-## Features
+## 🚀 Key Features
 
-- **Five-phase Reynolds algorithm** with annotated telemetry showing which phase is active
-- **Detection box** projected ahead of the agent — highlights red on an active threat
-- **Local axes** overlay: heading (+X, blue) and side (+Y, green) vectors
-- **Force decomposition**: braking (red), lateral (purple), world-space resultant (orange)
-- **Wander** steering when no target is placed (jittered circle projection)
-- **Target seek** when a target is placed; avoidance forces take priority
-- **Place/remove obstacles** by clicking in obstacle mode
-- **Live telemetry**: speed, heading, detection box length, active phase, braking/lateral magnitudes
-- **Glossary modal** with nine definitions
+- **Svelte 5 + HTML5 Canvas:** High-performance local-space transformation visualization.
+- **Five-phase Reynolds algorithm:** Detailed breakdown and execution of:
+    - Phase 1: Local Space Transform
+    - Phase 2: Forward Culling
+    - Phase 3: Point Simplification (Expanded Bounds)
+    - Phase 4: Geometric Intersection Testing
+    - Phase 5: Force Generation
+- **Dynamic Visual Overlays:**
+    - **Detection Box:** Projected rectangular predictive vision cone ahead of the agent.
+    - **Local Axes:** Heading (+X, blue) and Side (+Y, green) vector decomposition.
+    - **Force Breakdown:** Visual vectors for braking (red), lateral (purple), and resultant forces (orange).
+- **Behavior Blending:** Seamless toggling between Target Seek (when clicked) and Erratic Wander mode (when idle).
+- **Interactive Simulation:** Click to add/remove obstacles and target nodes to test dynamic pathing real-time.
 
-## Usage
+## 📐 Mathematical Models
 
-```
-npm install
-npm run dev
-```
+### Local Space Transform
+$$\text{local.x} = \vec{\text{heading}} \cdot (\vec{\text{obstacle}} - \vec{\text{agent}})$$
+$$\text{local.y} = \vec{\text{side}} \cdot (\vec{\text{obstacle}} - \vec{\text{agent}})$$
+Transforms global 2D world coordinates into the agent's relative coordinate frame.
 
-Open `http://localhost:5173/cos30002-obstacle-avoidance/`.
+### Geometric Intersection (Line-Circle)
+$$\text{intersect\_x} = \text{local.x} - \sqrt{\text{expanded\_r}^2 - \text{local.y}^2}$$
+Determines the exact point on the agent's forward axis where it penetrates the obstacle's bounding sphere, solving via the Pythagorean theorem.
 
-## Keyboard Shortcuts
+### Force Generation
+$$\vec{F}_{\text{brake}} = (\text{radius} - \text{local.x}) \times \text{weight}_{\text{brake}}$$
+$$\vec{F}_{\text{lateral}} = (\text{radius} - |\text{local.y}|) \times \text{weight}_{\text{lat}} \times \text{sign}$$
+Generates proportional push-back forces to avoid the specific intersection geometry.
 
-| Key | Action |
-|-----|--------|
-| T | Toggle agent trail |
-| B | Toggle detection box |
-| L | Toggle local axes |
-| F | Toggle force vectors |
-| R | Reset simulation |
-| O | Obstacle placement mode |
-| G | Target placement mode |
-| Esc | Return to observe mode |
+## 💻 Tech Stack
 
-## Controls
+- **Framework:** [Svelte 5](https://svelte.dev/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
+- **Rendering:** HTML5 Canvas API
+- **Styling:** CSS variables via Master Template (`app.css`)
 
-| Parameter | Description |
-|-----------|-------------|
-| Max Speed | Agent velocity cap (px/s) |
-| Max Force | Steering acceleration cap — lower = sluggish turns |
-| Bounding Radius | Agent body size, inflates obstacle radii during intersection check |
-| Box Length | Detection box lookahead distance (px) |
-| Braking Weight | Scales the −X (deceleration) force |
-| Lateral Multiplier | Scales the ±Y (sideways steering) force |
-| Obstacle Avoidance | Global weight on the avoidance steering output |
-| Target Seek | Weight on seek behaviour (active when target is placed) |
-| Wander | Weight on wander behaviour (active when no target is placed) |
+## 👨‍🏫 Local Development & Deployment
 
-## Stack
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-- Svelte 5 (runes)
-- Vite
-- Biome (linting)
+2. **Run Dev Server:**
+   ```bash
+   npm run dev
+   ```
 
-## References
+3. **Build for Production (Canvas RCE Deployment):**
+   ```bash
+   npm run build
+   ```
 
-- Reynolds, C. (1999). *Steering Behaviors for Autonomous Characters*. GDC 1999.
-- Buckland, M. (2005). *Programming Game AI by Example*. Wordware Publishing.
+## 📄 License
+
+This repository is licensed under the terms described in the [LICENSE](./LICENSE) file. 
+
+---
+_Made with ❤️ for Swinburne — COS30002 Artificial Intelligence for Games — By E. Ketterer_

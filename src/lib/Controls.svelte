@@ -187,6 +187,12 @@ let {
   </header>
 
   <div class="toggle-row">
+    <label class="toggle-label" for="chk-torus">
+      <input type="checkbox" id="chk-torus" bind:checked={params.torusMode}>
+      Torus Wrapping
+    </label>
+  </div>
+  <div class="toggle-row">
     <label class="toggle-label" for="chk-trail">
       <input type="checkbox" id="chk-trail" bind:checked={showTrail}>
       Show Trail

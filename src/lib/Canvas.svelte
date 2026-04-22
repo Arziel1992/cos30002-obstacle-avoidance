@@ -25,6 +25,8 @@ const C = {
 	agentFill: "#3b82f6",
 	agentBorder: "#2563eb",
 	agentGlow: "rgba(59,130,246,0.25)",
+	edgeMargin: "rgba(99,102,241,0.06)",
+	edgeBorder: "rgba(99,102,241,0.18)",
 
 	trail: "rgba(59,130,246,0.35)",
 	velocity: "#fbbf24",
@@ -52,13 +54,14 @@ const C = {
 function handleResize() {
 	if (!containerRef || !canvas || !ctx) return;
 	const rect = containerRef.getBoundingClientRect();
-	const dpr = window.devicePixelRatio || 1;
 	width = rect.width;
 	height = rect.height;
+	const dpr = window.devicePixelRatio || 1;
 	canvas.width = width * dpr;
 	canvas.height = height * dpr;
 	canvas.style.width = `${width}px`;
 	canvas.style.height = `${height}px`;
+	ctx.resetTransform();
 	ctx.scale(dpr, dpr);
 }
 
@@ -73,7 +76,7 @@ function handleClick(e) {
 
 	if (interactionMode === "obstacle") {
 		const removed = simulation.removeObstacleNear(x, y, 20);
-		if (!removed) simulation.addObstacle(x, y, params.obstacleRadius);
+		if (!removed) simulation.addObstacle(x, y, Number(params.obstacleRadius));
 	} else if (interactionMode === "target") {
 		if (simulation.target) {
 			const dx = simulation.target.x - x;
@@ -109,6 +112,21 @@ function drawGrid() {
 	for (let y = 0; y < height; y += step) {
 		ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
 	}
+}
+
+function drawEdgeMargin() {
+	if (params.torusMode) return;
+	const m = 40;
+	ctx.fillStyle = C.edgeMargin;
+	ctx.fillRect(0, 0, m, height);
+	ctx.fillRect(width - m, 0, m, height);
+	ctx.fillRect(m, 0, width - 2 * m, m);
+	ctx.fillRect(m, height - m, width - 2 * m, m);
+	ctx.strokeStyle = C.edgeBorder;
+	ctx.lineWidth = 1;
+	ctx.setLineDash([6, 4]);
+	ctx.strokeRect(m, m, width - 2 * m, height - 2 * m);
+	ctx.setLineDash([]);
 }
 
 function drawObstacles() {
@@ -340,6 +358,7 @@ function draw() {
 	if (!ctx) return;
 	ctx.clearRect(0, 0, width, height);
 	drawGrid();
+	drawEdgeMargin();
 	if (showTrail) drawTrail();
 	drawObstacles();
 	drawTarget();
@@ -352,15 +371,21 @@ function draw() {
 
 onMount(() => {
 	ctx = canvas.getContext("2d");
-	handleResize();
-	const ro = new ResizeObserver(handleResize);
-	if (containerRef) ro.observe(containerRef);
 
 	let rafId;
 	const loop = () => { draw(); rafId = requestAnimationFrame(loop); };
 	loop();
 
-	return () => { cancelAnimationFrame(rafId); ro.disconnect(); };
+	return () => cancelAnimationFrame(rafId);
+});
+
+$effect(() => {
+	if (containerRef && canvas) {
+		const ro = new ResizeObserver(() => handleResize());
+		ro.observe(containerRef);
+		handleResize();
+		return () => ro.disconnect();
+	}
 });
 </script>
 

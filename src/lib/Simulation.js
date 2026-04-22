@@ -118,10 +118,11 @@ export function calculateObstacleAvoidance(agent, obstacles, boxLen, params) {
 	debug.phase = 5;
 
 	// Phase 5: generate braking (−X) and lateral (±Y) forces in local space
-	const brakingMag = (closestObs.radius - closestLocal.x) * brakingWeight;
+	const expandedRadius = closestObs.radius + boundingRadius;
+	const brakingMag = (expandedRadius - closestLocal.x) * brakingWeight;
 	// Sign of lateral: push away from the side the obstacle is on
 	const lateralSign = closestLocal.y < 0 ? 1 : -1;
-	const lateralMag = (closestObs.radius - Math.abs(closestLocal.y)) * lateralMultiplier * lateralSign;
+	const lateralMag = (expandedRadius - Math.abs(closestLocal.y)) * lateralMultiplier * lateralSign;
 
 	debug.brakingMag = Math.abs(brakingMag);
 	debug.lateralMag = Math.abs(lateralMag);
@@ -143,7 +144,20 @@ export function calculateSeek(position, target, velocity, maxSpeed) {
 }
 
 /**
- * Wander steering: smooth autonomous locomotion via a jitter angle on a
+ * Edge avoidance (non-torus): steer away from borders.
+ */
+function calculateEdgeAvoidance(position, width, height, margin = 70) {
+	const strength = 320;
+	let fx = 0, fy = 0;
+	if (position.x < margin) fx += strength * (1 - position.x / margin);
+	if (position.x > width - margin) fx -= strength * (1 - (width - position.x) / margin);
+	if (position.y < margin) fy += strength * (1 - position.y / margin);
+	if (position.y > height - margin) fy -= strength * (1 - (height - position.y) / margin);
+	return { x: fx, y: fy };
+}
+
+/**
+ * Wander steering: jittered autonomous locomotion. via a jitter angle on a
  * projected circle (Reynolds 1999).
  */
 export function calculateWander(agent, maxSpeed, wanderDist = 80, wanderRadius = 40, wanderJitter = 1.8) {
@@ -227,18 +241,17 @@ export class ObstacleAvoidanceSim {
 		const agent = this.agent;
 		const dt = 1 / 60;
 
-		const {
-			maxSpeed,
-			maxForce,
-			boundingRadius,
-			detectionBoxLength,
-			brakingWeight,
-			lateralMultiplier,
-			weightAvoidance,
-			weightSeek,
-			weightWander,
-			showTrail,
-		} = params;
+		const maxSpeed = Number(params.maxSpeed);
+		const maxForce = Number(params.maxForce);
+		const boundingRadius = Number(params.boundingRadius);
+		const detectionBoxLength = Number(params.detectionBoxLength);
+		const brakingWeight = Number(params.brakingWeight);
+		const lateralMultiplier = Number(params.lateralMultiplier);
+		const weightAvoidance = Number(params.weightAvoidance);
+		const weightSeek = Number(params.weightSeek);
+		const weightWander = Number(params.weightWander);
+		const showTrail = params.showTrail;
+		const torus = params.torusMode;
 
 		agent.maxSpeed = maxSpeed;
 		agent.maxForce = maxForce;
@@ -263,6 +276,11 @@ export class ObstacleAvoidanceSim {
 			totalForce = add(totalForce, scale(wanderForce, weightWander));
 		}
 
+		if (!torus) {
+			const edge = calculateEdgeAvoidance(agent.position, canvasSize.width, canvasSize.height);
+			totalForce = add(totalForce, edge);
+		}
+
 		// ── Integrate ────────────────────────────────────────────────
 		const steering = truncate(totalForce, maxForce);
 		agent.velocity = truncate(add(agent.velocity, scale(steering, dt)), maxSpeed);
@@ -275,12 +293,19 @@ export class ObstacleAvoidanceSim {
 
 		agent.position = add(agent.position, scale(agent.velocity, dt));
 
-		// ── Boundary: soft wrap ─────────────────────────────────────
-		const margin = 40;
-		if (agent.position.x < -margin) agent.position.x = canvasSize.width + margin;
-		if (agent.position.x > canvasSize.width + margin) agent.position.x = -margin;
-		if (agent.position.y < -margin) agent.position.y = canvasSize.height + margin;
-		if (agent.position.y > canvasSize.height + margin) agent.position.y = -margin;
+		// ── Boundary ─────────────────────────────────────
+		if (torus) {
+			const margin = 40;
+			if (agent.position.x < -margin) agent.position.x = canvasSize.width + margin;
+			else if (agent.position.x > canvasSize.width + margin) agent.position.x = -margin;
+			if (agent.position.y < -margin) agent.position.y = canvasSize.height + margin;
+			else if (agent.position.y > canvasSize.height + margin) agent.position.y = -margin;
+		} else {
+			if (agent.position.x < 0) { agent.position.x = 0; agent.velocity.x = Math.abs(agent.velocity.x); }
+			else if (agent.position.x > canvasSize.width) { agent.position.x = canvasSize.width; agent.velocity.x = -Math.abs(agent.velocity.x); }
+			if (agent.position.y < 0) { agent.position.y = 0; agent.velocity.y = Math.abs(agent.velocity.y); }
+			else if (agent.position.y > canvasSize.height) { agent.position.y = canvasSize.height; agent.velocity.y = -Math.abs(agent.velocity.y); }
+		}
 
 		// ── Trail ────────────────────────────────────────────────────
 		if (showTrail) {
