@@ -1,6 +1,14 @@
 # Changelog
 
-## 2026.06.19-2218
+## 2026-06-19 - 23:18
+
+- Migrated the package manager from npm to **pnpm** (global pnpm via Volta)
+- Updated CI (`deploy.yml`) to set up pnpm via `pnpm/action-setup` and run `pnpm install --frozen-lockfile` + `pnpm run build`
+- Updated README commands to pnpm
+- `pnpm-lock.yaml` (imported from the previous `package-lock.json`, which was removed)
+- Node pin `"volta": { "node": "24.17.0" }` in `package.json`
+
+## 2026-06-19 - 22:18
 
 - Conformed to the refined `tool_template` shared structure
 - Upgraded toolchain to Svelte 5.56.3, Vite 8, `@sveltejs/vite-plugin-svelte` 7, and Biome 2.5.0; CI Node bumped to 24
@@ -8,7 +16,7 @@
 - Displayed the build version next to the repository link in the right-panel footer
 - Added `svelte.config.js` (`vitePreprocess`) and `.markdownlint.json` (David Anson Markdown Lint) config
 
-## 2026.04.22-2337
+## 2026-04-22 - 23:37
 
 - Initial release of the Local Space Obstacle Avoidance interactive tool
 - Implemented Reynolds' five-phase local-space obstacle avoidance algorithm (GDC 1999 / Buckland 2005)

@@ -1,6 +1,6 @@
 {
 	"name": "cos30002-obstacle-avoidance",
-	"version": "2026.06.19-2218",
+	"version": "2026.06.19-2318",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -15,5 +15,8 @@
 		"@biomejs/biome": "2.5.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"vite": "^8.0.0"
+	},
+	"volta": {
+		"node": "24.17.0"
 	}
 }
