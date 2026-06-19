@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-20 - 05:06
+
+- Added a hard collision safety net: if the agent penetrates an obstacle (high speed / low max force), it is pushed back to the surface and its inward velocity is cancelled, so it can never clip through cover
+- Lateral avoidance force now uses Buckland's proximity multiplier `1 + (boxLen − localX)/boxLen`, so nearer obstacles produce a harder steer instead of under-steering
+
 ## 2026-06-19 - 23:18
 
 - Migrated the package manager from npm to **pnpm** (global pnpm via Volta)

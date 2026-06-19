@@ -122,7 +122,11 @@ export function calculateObstacleAvoidance(agent, obstacles, boxLen, params) {
 	const brakingMag = (expandedRadius - closestLocal.x) * brakingWeight;
 	// Sign of lateral: push away from the side the obstacle is on
 	const lateralSign = closestLocal.y < 0 ? 1 : -1;
-	const lateralMag = (expandedRadius - Math.abs(closestLocal.y)) * lateralMultiplier * lateralSign;
+	// Buckland proximity multiplier: the nearer the obstacle along the heading
+	// axis, the harder the lateral steer — prevents under-steering on close calls.
+	const proximityMult = 1 + Math.max(0, boxLen - closestLocal.x) / boxLen;
+	const lateralMag =
+		(expandedRadius - Math.abs(closestLocal.y)) * lateralMultiplier * lateralSign * proximityMult;
 
 	debug.brakingMag = Math.abs(brakingMag);
 	debug.lateralMag = Math.abs(lateralMag);
@@ -133,6 +137,26 @@ export function calculateObstacleAvoidance(agent, obstacles, boxLen, params) {
 	debug.worldForce = worldForce;
 
 	return { force: worldForce, debug };
+}
+
+/**
+ * Hard collision resolution: if the agent has penetrated an obstacle (e.g. at
+ * high speed or low max force, where the steering force alone was insufficient),
+ * push it back to the surface and cancel the inward velocity component. This is
+ * the safety net that guarantees the agent never clips through cover.
+ */
+function resolveCollisions(agent, obstacles) {
+	for (const obs of obstacles) {
+		const delta = sub(agent.position, obs.position);
+		const dist = magnitude(delta);
+		const minDist = obs.radius + agent.boundingRadius;
+		if (dist < minDist && dist > 1e-5) {
+			const n = scale(delta, 1 / dist);
+			agent.position = add(agent.position, scale(n, minDist - dist));
+			const inward = dot(agent.velocity, n);
+			if (inward < 0) agent.velocity = sub(agent.velocity, scale(n, inward));
+		}
+	}
 }
 
 /**
@@ -292,6 +316,9 @@ export class ObstacleAvoidanceSim {
 		}
 
 		agent.position = add(agent.position, scale(agent.velocity, dt));
+
+		// ── Hard collision safety net (prevents clipping through obstacles) ──
+		resolveCollisions(agent, this.obstacles);
 
 		// ── Boundary ─────────────────────────────────────
 		if (torus) {
