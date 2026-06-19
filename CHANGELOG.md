@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.06.19-2218
+
+- Conformed to the refined `tool_template` shared structure
+- Upgraded toolchain to Svelte 5.56.3, Vite 8, `@sveltejs/vite-plugin-svelte` 7, and Biome 2.5.0; CI Node bumped to 24
+- Normalised `src/app.css` and `.gitignore` to the canonical shared versions
+- Displayed the build version next to the repository link in the right-panel footer
+- Added `svelte.config.js` (`vitePreprocess`) and `.markdownlint.json` (David Anson Markdown Lint) config
+
 ## 2026.04.22-2337
 
 - Initial release of the Local Space Obstacle Avoidance interactive tool

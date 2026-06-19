@@ -1,4 +1,5 @@
 <script>
+import { version } from "../package.json";
     import { onMount } from 'svelte';
     import Canvas from './lib/Canvas.svelte';
     import Controls from './lib/Controls.svelte';
@@ -216,6 +217,7 @@
                         ></path>
                     </svg> Repository
                 </a>
+                <span class="app-version" style="font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; opacity: 0.55; margin-left: 0.4rem;">v{version}</span>
             </div>
         </aside>
     {/if}

@@ -1,6 +1,10 @@
 /**
  * COS30002 Master UI Template Styles
  * Standardises layouts, fonts, spacings, and colors for all Svelte sub-tools.
+ *
+ * This file is CANONICAL: it must remain byte-identical across every
+ * cos30002-* tool. Tool-specific styling belongs in scoped component <style>
+ * blocks (e.g. Telemetry.svelte, Controls.svelte), never here.
  */
 
 :root {
