@@ -91,7 +91,14 @@ import { version } from "../package.json";
 
     onMount(() => {
         let animationId;
-        const loop = () => {
+        // Fixed-timestep accumulator so the sim runs at real-time speed regardless
+        // of display refresh rate (144 Hz would otherwise run it ~2.4× too fast).
+        const STEP = 1 / 60;
+        let last = performance.now();
+        let acc = 0;
+        const loop = (now) => {
+            acc += Math.min((now - last) / 1000, 0.1);
+            last = now;
             if (containerRef && !initialised) {
                 const rect = containerRef.getBoundingClientRect();
                 simulation.initialise(rect.width, rect.height);
@@ -99,15 +106,15 @@ import { version } from "../package.json";
             }
             if (containerRef) {
                 const rect = containerRef.getBoundingClientRect();
-                simulation.update(
-                    { ...params, showTrail },
-                    { width: rect.width, height: rect.height },
-                    telemetry,
-                );
+                const bounds = { width: rect.width, height: rect.height };
+                while (acc >= STEP) {
+                    simulation.update({ ...params, showTrail }, bounds, telemetry);
+                    acc -= STEP;
+                }
             }
             animationId = requestAnimationFrame(loop);
         };
-        loop();
+        animationId = requestAnimationFrame(loop);
         window.addEventListener('keydown', handleKeydown);
         return () => {
             cancelAnimationFrame(animationId);
