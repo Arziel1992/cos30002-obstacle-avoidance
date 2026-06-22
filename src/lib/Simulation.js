@@ -135,9 +135,15 @@ export function calculateObstacleAvoidance(agent, obstacles, boxLen, params, goa
 
 	debug.phase = 5;
 
-	// Phase 5: generate braking (−X) and lateral (±Y) forces in local space
+	// Phase 5: generate braking (−X) and lateral (±Y) forces in local space.
+	// Scale braking by current speed: you only need to slow when actually closing
+	// fast. Without this, at low speed the braking (−X) cancels the seek (+X) on a
+	// head-on approach and the agent stalls into a stop / advance-retreat cycle;
+	// fading braking near zero speed lets the lateral steer carry it smoothly
+	// around (the hard collision resolve still prevents clipping at high speed).
 	const expandedRadius = closestObs.radius + boundingRadius;
-	const brakingMag = (expandedRadius - closestLocal.x) * brakingWeight;
+	const speedFactor = Math.min(1, speed / (agent.maxSpeed || 120));
+	const brakingMag = (expandedRadius - closestLocal.x) * brakingWeight * speedFactor;
 
 	// Sign of lateral: push away from the side the obstacle is on. Near a head-on
 	// approach localY ≈ 0, so the raw sign flickers frame-to-frame and the agent

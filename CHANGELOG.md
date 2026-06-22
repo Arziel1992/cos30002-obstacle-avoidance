@@ -1,6 +1,11 @@
 # Changelog
 
 
+
+## 2026-06-23 - 04:23
+
+- Fixed the braking stop-go: the agent no longer decelerates to a stall and shuffles forward/back near a head-on obstacle. Braking now scales with speed (fading to zero as the agent slows) and the default braking is gentler with a stronger lateral steer, so the agent flows around the obstacle in one smooth arc.
+
 ## 2026-06-23 - 03:46
 
 - Frame-rate independence: the simulation now advances on a fixed-timestep accumulator, so it runs at the same real-time speed on any display (a 144 Hz screen no longer runs it ~2.4x too fast).
