@@ -2,6 +2,11 @@
 
 
 
+
+## 2026-06-23 - 04:55
+
+- Added one-click scenario presets (Two pillars, Slalom, Narrow gap, Scatter) so interesting avoidance situations are a click away.
+
 ## 2026-06-23 - 04:23
 
 - Fixed the braking stop-go: the agent no longer decelerates to a stall and shuffles forward/back near a head-on obstacle. Braking now scales with speed (fading to zero as the agent slows) and the default braking is gentler with a stronger lateral steer, so the agent flows around the obstacle in one smooth arc.

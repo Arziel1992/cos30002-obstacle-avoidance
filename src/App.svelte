@@ -67,6 +67,14 @@ import { version } from "../package.json";
         interactionMode = 'select';
     }
 
+    function handlePreset(name) {
+        if (containerRef) {
+            const rect = containerRef.getBoundingClientRect();
+            simulation.loadPreset(name, rect.width, rect.height);
+        }
+        interactionMode = 'select';
+    }
+
     function handleClearObstacles() {
         simulation.clearObstacles();
     }
@@ -195,6 +203,7 @@ import { version } from "../package.json";
                     bind:interactionMode
                     onReset={handleReset}
                     onGlossary={openGlossary}
+                    onPreset={handlePreset}
                     onClearObstacles={handleClearObstacles}
                     onClearTarget={handleClearTarget}
                     {obstacleCount}

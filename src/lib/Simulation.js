@@ -274,18 +274,41 @@ export class ObstacleAvoidanceSim {
 	}
 
 	initialise(canvasWidth, canvasHeight) {
-		const w = canvasWidth;
-		const h = canvasHeight;
-		// Seed a readable default: the agent starts on the left heading right and
-		// must round two obstacles to reach a target — so the behaviour the tool
-		// teaches is visible the moment it loads, rather than an empty canvas.
+		this.loadPreset("default", canvasWidth, canvasHeight);
+	}
+
+	/**
+	 * One-click scenarios. The agent always starts on the left heading right
+	 * toward a target on the right, so the avoidance behaviour is visible at once.
+	 */
+	loadPreset(name, w, h) {
 		this.agent = new Agent(w * 0.12, h * 0.5);
 		this.agent.velocity = { x: 90, y: 0 };
-		this.obstacles = [
-			new Obstacle(w * 0.42, h * 0.46, 40),
-			new Obstacle(w * 0.62, h * 0.6, 48),
-		];
 		this.target = { x: w * 0.88, y: h * 0.5 };
+		if (name === "slalom") {
+			this.obstacles = [
+				new Obstacle(w * 0.32, h * 0.34, 38),
+				new Obstacle(w * 0.5, h * 0.64, 40),
+				new Obstacle(w * 0.68, h * 0.36, 38),
+			];
+		} else if (name === "gap") {
+			this.obstacles = [
+				new Obstacle(w * 0.5, h * 0.33, 54),
+				new Obstacle(w * 0.5, h * 0.67, 54),
+			];
+		} else if (name === "scatter") {
+			this.obstacles = [];
+			for (let i = 0; i < 6; i++) {
+				this.obstacles.push(
+					new Obstacle(w * (0.25 + Math.random() * 0.5), h * (0.2 + Math.random() * 0.6), 24 + Math.random() * 24),
+				);
+			}
+		} else {
+			this.obstacles = [
+				new Obstacle(w * 0.42, h * 0.46, 40),
+				new Obstacle(w * 0.62, h * 0.6, 48),
+			];
+		}
 	}
 
 	reset(canvasWidth, canvasHeight) {

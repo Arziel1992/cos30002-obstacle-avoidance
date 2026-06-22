@@ -10,12 +10,30 @@ let {
 	onGlossary = () => {},
 	onClearObstacles = () => {},
 	onClearTarget = () => {},
+	onPreset = () => {},
 	obstacleCount = 0,
 	hasTarget = false,
 } = $props();
+
+const presets = [
+	{ id: "default", label: "Two pillars" },
+	{ id: "slalom", label: "Slalom" },
+	{ id: "gap", label: "Narrow gap" },
+	{ id: "scatter", label: "Scatter" },
+];
 </script>
 
 <div class="controls-panel">
+
+  <!-- ── Preset scenarios ── -->
+  <header class="section-header">
+    <h3>Scenario</h3>
+  </header>
+  <div class="preset-row">
+    {#each presets as p (p.id)}
+      <button class="preset-btn" onclick={() => onPreset(p.id)}>{p.label}</button>
+    {/each}
+  </div>
 
   <!-- ── Interaction Mode ── -->
   <header class="section-header">
@@ -223,6 +241,14 @@ let {
 </div>
 
 <style>
+  .preset-row { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+  .preset-btn {
+    flex: 1 1 auto; padding: 0.4rem 0.5rem; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--panel-border); background: var(--bg-secondary);
+    color: var(--text-secondary); font-size: 0.7rem; font-weight: 700; transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
   .mode-row { display: flex; gap: 0.3rem; flex-wrap: wrap; }
   .mode-btn {
     flex: 1; min-width: 0; padding: 0.45rem 0.3rem; border-radius: 6px;
