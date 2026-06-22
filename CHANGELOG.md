@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-23 - 02:55
+
+- Fixed residual **low-speed jitter**: the local detection frame swung when the velocity-derived heading was noisy at low speed. The heading is now low-pass filtered, so the detection box turns smoothly at any speed and the agent rounds obstacles cleanly.
+- Trail is now on by default so the (smooth) path is visible on load.
+
 ## 2026-06-22 - 22:14
 
 - Fixed the avoidance **jitter**: near a head-on approach the lateral steer sign flipped every frame, making the agent shuffle left/right. The agent now commits to one side per obstacle (with a deadband) and biases toward the goal's side, producing a single smooth detour.

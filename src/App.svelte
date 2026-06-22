@@ -21,7 +21,7 @@ import { version } from "../package.json";
         weightSeek: 1.5,
         weightWander: 1.0,
         obstacleRadius: 30,
-        showTrail: false,
+        showTrail: true,
         torusMode: true,
     });
 
@@ -36,7 +36,7 @@ import { version } from "../package.json";
         hasTarget: false,
     });
 
-    let showTrail = $state(false);
+    let showTrail = $state(true);
     let showLocalAxes = $state(true);
     let showDetectionBox = $state(true);
     let showForceVectors = $state(true);

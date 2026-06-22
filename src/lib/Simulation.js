@@ -54,7 +54,24 @@ export function vectorToWorldSpace(localVec, heading, side) {
  */
 export function calculateObstacleAvoidance(agent, obstacles, boxLen, params, goal = null) {
 	const { boundingRadius, brakingWeight, lateralMultiplier } = params;
-	const heading = normalise(agent.velocity);
+
+	// Stable heading. At low speed `normalise(velocity)` is noisy, so the whole
+	// local detection frame swings frame-to-frame and the agent jitters even with
+	// side hysteresis. We low-pass-filter the heading: a fresh sample blends only
+	// partially into the held heading, so the detection box turns smoothly at any
+	// speed (and holds steady when the agent nearly stops) — no jitter.
+	const speed = magnitude(agent.velocity);
+	const raw =
+		speed > 1
+			? normalise(agent.velocity)
+			: agent._heading ?? (goal ? normalise(sub(goal, agent.position)) : { x: 1, y: 0 });
+	agent._heading = agent._heading
+		? normalise({
+				x: agent._heading.x * 0.8 + raw.x * 0.2,
+				y: agent._heading.y * 0.8 + raw.y * 0.2,
+			})
+		: raw;
+	const heading = agent._heading;
 	const side = { x: -heading.y, y: heading.x };
 
 	let closestDist = Number.POSITIVE_INFINITY;
