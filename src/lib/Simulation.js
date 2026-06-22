@@ -52,7 +52,7 @@ export function vectorToWorldSpace(localVec, heading, side) {
  * Reynolds Local-Space Obstacle Avoidance (Buckland 2005 / Reynolds GDC 1999).
  * Returns { force, debug } where debug carries visualisation data.
  */
-export function calculateObstacleAvoidance(agent, obstacles, boxLen, params) {
+export function calculateObstacleAvoidance(agent, obstacles, boxLen, params, goal = null) {
 	const { boundingRadius, brakingWeight, lateralMultiplier } = params;
 	const heading = normalise(agent.velocity);
 	const side = { x: -heading.y, y: heading.x };
@@ -112,6 +112,7 @@ export function calculateObstacleAvoidance(agent, obstacles, boxLen, params) {
 	};
 
 	if (!closestObs) {
+		agent._avoidObs = null; // clear committed side once the path is clear
 		return { force: { x: 0, y: 0 }, debug };
 	}
 
@@ -120,8 +121,26 @@ export function calculateObstacleAvoidance(agent, obstacles, boxLen, params) {
 	// Phase 5: generate braking (−X) and lateral (±Y) forces in local space
 	const expandedRadius = closestObs.radius + boundingRadius;
 	const brakingMag = (expandedRadius - closestLocal.x) * brakingWeight;
-	// Sign of lateral: push away from the side the obstacle is on
-	const lateralSign = closestLocal.y < 0 ? 1 : -1;
+
+	// Sign of lateral: push away from the side the obstacle is on. Near a head-on
+	// approach localY ≈ 0, so the raw sign flickers frame-to-frame and the agent
+	// jitters left/right. To get one smooth detour we COMMIT to a side per
+	// obstacle: once chosen it is held until the obstacle clears or moves well to
+	// the other side (a deadband). On a fresh head-on threat we bias toward the
+	// side the goal is on, so the agent rounds the obstacle the efficient way.
+	const deadband = expandedRadius * 0.5;
+	const sameObs = agent._avoidObs === closestObs;
+	let lateralSign;
+	if (sameObs && agent._avoidSide && Math.abs(closestLocal.y) < deadband) {
+		lateralSign = agent._avoidSide; // hold the committed side
+	} else if (Math.abs(closestLocal.y) < deadband && goal) {
+		const goalLocal = pointToLocalSpace(goal, agent.position, heading, side);
+		lateralSign = goalLocal.y >= 0 ? 1 : -1; // steer toward the goal's side
+	} else {
+		lateralSign = closestLocal.y < 0 ? 1 : -1;
+	}
+	agent._avoidObs = closestObs;
+	agent._avoidSide = lateralSign;
 	// Buckland proximity multiplier: the nearer the obstacle along the heading
 	// axis, the harder the lateral steer — prevents under-steering on close calls.
 	const proximityMult = 1 + Math.max(0, boxLen - closestLocal.x) / boxLen;
@@ -232,9 +251,18 @@ export class ObstacleAvoidanceSim {
 	}
 
 	initialise(canvasWidth, canvasHeight) {
-		this.agent = new Agent(canvasWidth / 2, canvasHeight / 2);
-		this.obstacles = [];
-		this.target = null;
+		const w = canvasWidth;
+		const h = canvasHeight;
+		// Seed a readable default: the agent starts on the left heading right and
+		// must round two obstacles to reach a target — so the behaviour the tool
+		// teaches is visible the moment it loads, rather than an empty canvas.
+		this.agent = new Agent(w * 0.12, h * 0.5);
+		this.agent.velocity = { x: 90, y: 0 };
+		this.obstacles = [
+			new Obstacle(w * 0.42, h * 0.46, 40),
+			new Obstacle(w * 0.62, h * 0.6, 48),
+		];
+		this.target = { x: w * 0.88, y: h * 0.5 };
 	}
 
 	reset(canvasWidth, canvasHeight) {
@@ -286,7 +314,7 @@ export class ObstacleAvoidanceSim {
 
 		const avoidParams = { boundingRadius, brakingWeight, lateralMultiplier };
 		const { force: avoidForce, debug } = calculateObstacleAvoidance(
-			agent, this.obstacles, detectionBoxLength, avoidParams,
+			agent, this.obstacles, detectionBoxLength, avoidParams, this.target,
 		);
 		agent.debugAvoidance = debug;
 

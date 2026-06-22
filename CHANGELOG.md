@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-22 - 22:14
+
+- Fixed the avoidance **jitter**: near a head-on approach the lateral steer sign flipped every frame, making the agent shuffle left/right. The agent now commits to one side per obstacle (with a deadband) and biases toward the goal's side, producing a single smooth detour.
+- Seeded a default scene (agent + two obstacles + target) so the avoidance behaviour is visible on load instead of an empty canvas.
+
 ## 2026-06-20 - 05:06
 
 - Added a hard collision safety net: if the agent penetrates an obstacle (high speed / low max force), it is pushed back to the surface and its inward velocity is cancelled, so it can never clip through cover
